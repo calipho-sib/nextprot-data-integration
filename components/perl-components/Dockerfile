@@ -38,8 +38,12 @@ RUN cpan -f DBI::DBD
 
 # Download ensembl
 WORKDIR /lib/perl/ensembl
-RUN curl -L -O https://github.com/Ensembl/ensembl-vep/archive/release/98.zip
-RUN unzip 98.zip
+RUN wget ftp://ftp.ensembl.org/pub/ensembl-api.tar.gz
+RUN tar zxf ensembl-api.tar.gz
+
+# Bioperl
+RUN wget https://cpan.metacpan.org/authors/id/C/CJ/CJFIELDS/BioPerl-1.6.924.tar.gz
+RUN tar zxf BioPerl-1.6.924.tar.gz
 
 # Copy nextprot perl parsers
 COPY lib/perl/nextprot-perl-parsers/ /src/perl/nextprot-perl-parsers
@@ -60,4 +64,14 @@ COPY properties/np1.properties /app/properties/config
 ENV PROP_FILE=/app/properties/dataload.properties
 
 # Add all env variables
+RUN mkdir /log
 ENV NP1_LOG_DIR=/log
+
+# Install perl parsers
+WORKDIR /app/nextprot-loaders/tools.integration
+RUN ant -lib lib/ -propertyfile $PROP_FILE install-perl > $NP1_LOG_DIR/install-perl_$(date "+%Y%m%d")-$(hostname).log
+
+# Perl libs in ENV
+ENV ENSEMBL_LIB=/lib/perl/ensembl
+ENV NEXTPROT_PERL_PARSE_LIB=/lib/perl
+ENV PERL5LIB=$ENSEMBLE_LIB/BioPerl-1.6.924:$ENSEMBL_LIB/ensembl/modules:$ENSEMBL_LIB/ensembl-compara/modules:$ENSEMBL_LIB/ensembl-variation/modules:$ENSEMBL_LIB/ensembl-funcgen/modules:/lib/perl/lib/perl5/
