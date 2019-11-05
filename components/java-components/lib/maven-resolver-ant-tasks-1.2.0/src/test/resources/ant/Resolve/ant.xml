@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+
+<!DOCTYPE project [
+       <!ENTITY common SYSTEM "../common.xml">
+]>
+
+<project xmlns:repo="antlib:org.apache.maven.resolver.ant">
+
+  &common;
+
+  <repo:remoterepo id="remote" url="http://repo1.maven.org/maven2" type="default" releases="true" snapshots="true" updates="always" checksums="fail"/>
+  <repo:remoterepos id="resolver.repositories">
+    <repo:remoterepo refid="remote"/>
+  </repo:remoterepos>
+
+  <target name="setUp">
+    <delete dir="${build.dir}/resolvetest-local-repo"/>
+  </target>
+
+  <target name="testResolveGlobalPom">
+    <repo:pom file="${project.dir}/pom.xml"/>
+    <repo:resolve>
+      <properties prefix="test.resolve.path" classpath="compile"/>
+    </repo:resolve>
+  </target>
+
+  <target name="testResolveOverrideGlobalPom">
+    <repo:pom file="${project.dir}/dummy-pom.xml"/>
+    <repo:resolve>
+      <dependencies>
+        <pom file="${project.dir}/pom.xml"/>
+      </dependencies>
+      <properties prefix="test.resolve.path" classpath="compile"/>
+    </repo:resolve>
+  </target>
+
+  <target name="testResolveGlobalPomIntoOtherLocalRepo">
+    <repo:localrepo dir="${build.dir}/local-repo-custom"/>
+    <repo:pom file="${project.dir}/pom.xml"/>
+    <repo:resolve>
+      <properties prefix="test.resolve.path" classpath="compile"/>
+    </repo:resolve>
+  </target>
+
+  <target name="testResolveCustomFileLayout">
+    <repo:pom file="${project.dir}/pom.xml"/>
+    <repo:resolve>
+      <files dir="${build.dir}/resolve-custom-layout/" layout="{groupId}/{artifactId}/{groupIdDirs}/{extension}"/>
+    </repo:resolve>
+  </target>
+
+  <target name="testResolveAttachments">
+    <repo:resolve>
+      <dependencies>
+        <dependency groupid="org.eclipse.aether" artifactid="aether-impl" version="0.9.0.v20140226" />
+      </dependencies>
+      <files dir="${build.dir}/resolve-attachments/" layout="javadoc/{groupId}-{artifactId}-{classifier}.{extension}" attachments="javadoc"/>
+      <files dir="${build.dir}/resolve-attachments/" layout="sources/{groupId}-{artifactId}-{classifier}.{extension}" attachments="sources"/>
+    </repo:resolve>
+  </target>
+
+  <target name="testResolvePath">
+    <repo:pom file="${project.dir}/pom.xml"/>
+    <repo:resolve>
+      <path refid="out" classpath="compile"/>
+    </repo:resolve>
+    <echo>${tostring:out}</echo>
+  </target>
+
+  <target name="testResolveDepsFromFile">
+    <repo:resolve>
+      <dependencies file="${project.dir}/dependencies.txt">
+        <exclusion coords="org.eclipse.aether:aether-api"/>
+      </dependencies>
+      <properties prefix="test.resolve.path" classpath="runtime"/>
+    </repo:resolve>
+  </target>
+
+  <target name="testResolveNestedDependencyCollections">
+    <repo:resolve>
+      <dependencies>
+        <dependencies>
+          <dependency groupid="org.eclipse.aether" artifactid="aether-spi" version="0.9.0.v20140226" />
+        </dependencies>
+        <dependencies>
+          <dependency groupid="org.eclipse.aether" artifactid="aether-util" version="0.9.0.v20140226" />
+        </dependencies>
+        <exclusion coords="org.eclipse.aether:aether-api"/>
+      </dependencies>
+      <properties prefix="test.resolve.path" classpath="runtime"/>
+    </repo:resolve>
+  </target>
+
+  <target name="testResolveResourceCollectionOnly">
+    <repo:resolve>
+      <dependencies>
+        <dependency groupid="org.eclipse.aether" artifactid="aether-spi" version="0.9.0.v20140226" />
+      </dependencies>
+      <files refid="files"/>
+    </repo:resolve>
+  </target>
+
+</project>

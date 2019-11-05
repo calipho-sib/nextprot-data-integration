@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+
+<!DOCTYPE project [
+       <!ENTITY common SYSTEM "../common.xml">
+]>
+
+<project xmlns:repo="antlib:org.apache.maven.resolver.ant">
+
+  &common;
+  
+  <target name="testPom">
+    <repo:pom file="${project.dir}/pom1.xml"/>
+  </target>
+  
+  <target name="testArtifact">
+    <repo:pom file="${project.dir}/pom1.xml" id="pom"/>
+    <repo:artifact pomref="pom" file="${project.dir}/pom1.xml"/>
+  </target>
+  
+  <target name="testArtifactInMemoryPom">
+    <repo:pom groupid="test" artifactid="test" version="0.1-SNAPSHOT" id="pom"/>
+    <repo:artifact pomref="pom" file="${project.dir}/pom1.xml"/>
+  </target>
+
+  <target name="testResolveArtifact">
+    <repo:pom file="${project.dir}/pom1.xml" id="pom"/>
+    <repo:artifact pomref="pom" file="${project.dir}/pom1.xml" type="jar"/>
+    <repo:pom file="${project.dir}/pom2.xml" id="pom2"/>
+
+    <repo:resolve>
+      <dependencies pomref="pom2"/>
+      <properties prefix="resolve"/>
+    </repo:resolve>
+  </target>
+
+  <target name="testResolveArtifactInMemoryPom">
+    <repo:pom groupid="test" artifactid="test" version="0.1-SNAPSHOT" id="pom"/>
+    <repo:artifact pomref="pom" file="${project.dir}/pom1.xml" type="jar"/>
+    <repo:pom file="${project.dir}/pom2.xml" id="pom2"/>
+
+    <repo:resolve>
+      <dependencies pomref="pom2"/>
+      <properties prefix="resolve"/>
+    </repo:resolve>
+  </target>
+
+  <target name="testResolveVersionRange">
+    <repo:pom file="${project.dir}/pom1.xml" id="pom"/>
+    <repo:artifact pomref="pom" file="${project.dir}/pom1.xml" type="jar"/>
+
+    <repo:resolve>
+      <dependencies>
+        <dependency groupId="test" artifactId="test" version="[0,)"/>
+      </dependencies>
+      <properties prefix="resolve"/>
+    </repo:resolve>
+  </target>
+
+</project>
