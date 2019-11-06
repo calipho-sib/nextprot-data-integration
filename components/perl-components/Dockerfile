@@ -20,7 +20,7 @@ RUN update-alternatives --install "/usr/bin/ant" "ant" "/opt/ant/bin/ant" 1 && \
 # Install perl and cpan for required perl modules
 WORKDIR /shared
 RUN apt-get update
-RUN apt-get install -y build-essential git maven
+RUN apt-get install -y build-essential libz-dev libexpat1-dev libdbd-mysql-perl
 ADD http://www.cpan.org/src/5.0/perl-5.22.1.tar.gz /shared
 RUN tar -xzf perl-5.22.1.tar.gz
 
@@ -35,15 +35,20 @@ RUN apt-get -y install libmodule-build-perl
 
 # Install DBI and DBD::Mysql
 RUN cpan -f DBI::DBD
+RUN cpan PerlIO::gzip
+RUN cpan XML::Twig
+RUN cpan XML::Parser
 
 # Download ensembl
-WORKDIR /lib/perl/ensembl
-RUN wget ftp://ftp.ensembl.org/pub/ensembl-api.tar.gz
-RUN tar zxf ensembl-api.tar.gz
+WORKDIR /lib/perl/ensembl/97
+#RUN wget ftp://ftp.ensembl.org/pub/ensembl-api.tar.gz
+#RUN tar zxf ensembl-api.tar.gz
+COPY lib/97 /lib/perl/ensembl/97/
 
 # Bioperl
-RUN wget https://cpan.metacpan.org/authors/id/C/CJ/CJFIELDS/BioPerl-1.6.924.tar.gz
-RUN tar zxf BioPerl-1.6.924.tar.gz
+#RUN wget https://cpan.metacpan.org/authors/id/C/CJ/CJFIELDS/BioPerl-1.6.924.tar.gz
+#RUN tar zxf BioPerl-1.6.924.tar.gz
+#RUN mv BioPerl-1.6.924 bioperl-live
 
 # Copy nextprot perl parsers
 COPY lib/perl/nextprot-perl-parsers/ /src/perl/nextprot-perl-parsers
@@ -72,6 +77,14 @@ WORKDIR /app/nextprot-loaders/tools.integration
 RUN ant -lib lib/ -propertyfile $PROP_FILE install-perl > $NP1_LOG_DIR/install-perl_$(date "+%Y%m%d")-$(hostname).log
 
 # Perl libs in ENV
-ENV ENSEMBL_LIB=/lib/perl/ensembl
+ENV ENSEMBL_API_ROOT=/lib/perl/ensembl
+ENV ENSEMBL_LIB=/lib/perl/ensembl/97
 ENV NEXTPROT_PERL_PARSE_LIB=/lib/perl
-ENV PERL5LIB=$ENSEMBLE_LIB/BioPerl-1.6.924:$ENSEMBL_LIB/ensembl/modules:$ENSEMBL_LIB/ensembl-compara/modules:$ENSEMBL_LIB/ensembl-variation/modules:$ENSEMBL_LIB/ensembl-funcgen/modules:/lib/perl/lib/perl5/
+ENV PERL5LIB=$ENSEMBL_LIB/bioperl-live/lib:$ENSEMBL_LIB/ensembl/modules:$ENSEMBL_LIB/ensembl-compara/modules:$ENSEMBL_LIB/ensembl-variation/modules:$ENSEMBL_LIB/ensembl-funcgen/modules:/lib/perl/lib/perl5/
+
+# COPY intermediary files
+COPY int/tt-id-ensembl.txt /tmp/
+COPY int/ensembl-variants-tt.xml /tmp/
+
+RUN echo "ant -lib lib/ -propertyfile $PROP_FILE -Dids.file=tt-id-ensembl.txt -Dxml.file=ensembl-variants-tt.xml import-ensembl-variant-idfile" > task1.sh
+RUN chmod +x task1.sh
