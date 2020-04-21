@@ -61,7 +61,6 @@ RUN set -ex \
     && pip install pyasn1 \
     && pip install urllib3 \
     && pip install requests \
-    #&& pip install docker-py \
     && pip install docker \
     && pip install docker-compose \
     && pip install apache-airflow[crypto,celery,postgres,hive,jdbc,mysql,ssh${AIRFLOW_DEPS:+,}${AIRFLOW_DEPS}]==${AIRFLOW_VERSION} \
