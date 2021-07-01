@@ -82,6 +82,8 @@ ENV ENSEMBL_LIB=/lib/perl/ensembl/97
 ENV NEXTPROT_PERL_PARSE_LIB=/lib/perl
 ENV PERL5LIB=$ENSEMBL_LIB/bioperl-live/lib:$ENSEMBL_LIB/ensembl/modules:$ENSEMBL_LIB/ensembl-compara/modules:$ENSEMBL_LIB/ensembl-variation/modules:$ENSEMBL_LIB/ensembl-funcgen/modules:/lib/perl/lib/perl5/
 
+
+
 # COPY intermediary files
 COPY int/5000.txt /tmp/
 COPY int/5000to10000.txt /tmp/
