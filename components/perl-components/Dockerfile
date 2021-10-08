@@ -39,6 +39,7 @@ RUN cpan -f DBD::mysql
 RUN cpan PerlIO::gzip
 RUN cpan XML::Twig
 RUN cpan XML::Parser
+RUN cpan JSON
 
 # Download ensembl
 WORKDIR /lib/perl/ensembl/
@@ -72,8 +73,8 @@ RUN git ensembl --checkout --branch release/102 api
 RUN mkdir /app
 RUN mkdir /app/properties
 RUN mkdir /app/properties/config
-COPY properties/dataload.properties /app/properties
-COPY properties/np1.properties /app/properties/config
+#COPY properties/dataload.properties /app/properties
+#COPY properties/np1.properties /app/properties/config
 
 # Add ensembl to env
 ENV PROP_FILE=/app/properties/dataload.properties
@@ -83,7 +84,7 @@ RUN mkdir /log
 ENV NP1_LOG_DIR=/log
 
 # Install perl parsers
-WORKDIR /app/nextprot-loaders/tools.integration
+WORKDIR /app/scripts
 #RUN ant -lib lib/ -propertyfile $PROP_FILE install-perl > $NP1_LOG_DIR/install-perl_$(date "+%Y%m%d")-$(hostname).log
 
 # Perl libs in ENV
@@ -92,8 +93,8 @@ ENV ENSEMBL_LIB=/lib/perl/ensembl
 ENV NEXTPROT_PERL_PARSE_LIB=/lib/perl
 ENV PERL5LIB=$ENSEMBL_LIB/bioperl-live/lib:$ENSEMBL_LIB/ensembl/modules:$ENSEMBL_LIB/ensembl-compara/modules:$ENSEMBL_LIB/ensembl-variation/modules:$ENSEMBL_LIB/ensembl-funcgen/modules:$ENSEMBL_LIB/bioperl-live
 
-RUN mkdir /app/scripts
 COPY test-ensembl-api.pl /app/scripts
+COPY json-file-read.pl /app/scripts
 
 # COPY intermediary files
 #COPY int/5000.txt /tmp/
