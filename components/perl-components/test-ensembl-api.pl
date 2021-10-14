@@ -37,13 +37,28 @@ for my $entry ( @data ) {
   my $entry_ac = $entry->{entry};
   my $ensg = $entry->{ENSG};
 
+  print "-----------------\n";
+  print "Processing entry ".$entry->{entry}." with ENSG ".$ensg, "\n";
   if($ensg eq "") {
+    print "No ENSG found for entry\n";
     next;
   }
 
   my $adaptor = $registry->get_adaptor( "human", "core", "Gene");
   my $gene = $adaptor->fetch_by_stable_id($ensg);
 
+  if($gene eq "") {
+    print "No Gene found for ENSG ".$ensg, "\n";
+    next;
+  }
+
+  print "Found gene ".$gene->external_name(), "\n";
+
+  if (@{$entry->{isoforms}} == 0) {
+    print "No mapping isoforms for entry ".$entry, "\n";
+  }
+
+  $found_mapping = 0;
   for my $isoform (@{$entry->{isoforms}}) {
     foreach my $transcript ( @{ $gene->get_all_Transcripts() } ) {
       if ( $transcript->translation() ) {
@@ -59,6 +74,7 @@ for my $entry ( @data ) {
         if($isoform->{ENST} eq $enst && $isoform->{ENSP} eq $ensp) {
           print fh $entry_ac.",".$ensg.",".$enst.",".$ensp,",".$ensp_seq.",".$isoform->{isoform}.",".$isoform->{sequence},"\n";
           print "ENSP matched for transcript ". $enst, "\n";
+          $found_mapping = 1;
           next;
         }
 
@@ -72,6 +88,7 @@ for my $entry ( @data ) {
           if($isoform->{ENST} == $enst_a && $isoform->{ENSP} == $ensp) {
             print fh $entry_ac.",".$ensg.",".$enst.",".$ensp_a,",".$ensp_a_seq.",".$isoform->{isoform}.",".$isoform->{sequence},"\n";
             print "ENSP matched for alternative transcript ". $enst, "\n";
+            $found_mapping = 1;
             next;
           }
         }
@@ -79,6 +96,11 @@ for my $entry ( @data ) {
         print $transcript->stable_id(), " is non-coding\n";
       }
     }
+
+    if(!$found_mapping) {
+      print "No mapping found for isoform ".$isoform->{isoform},"\n";
+    }
+    print "-----------------\n";
   }
 }
 
