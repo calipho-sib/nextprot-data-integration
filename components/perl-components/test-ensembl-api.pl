@@ -59,7 +59,9 @@ for my $entry ( @data ) {
   }
 
   $found_mapping = 0;
+  $no_isoform = 0;
   for my $isoform (@{$entry->{isoforms}}) {
+    $no_isoform = $no_isoform + 1;
     foreach my $transcript ( @{ $gene->get_all_Transcripts() } ) {
       if ( $transcript->translation() ) {
         #print  $transcript->stable_id(),  "\n";
@@ -102,6 +104,7 @@ for my $entry ( @data ) {
     }
     print "-----------------\n";
   }
+  print("No of isoforms " + $no_isoform);
 }
 
 close($fh)
