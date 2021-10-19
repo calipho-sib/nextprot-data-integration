@@ -33,7 +33,12 @@ $registry->load_registry_from_db(
 # File to write
 open (fh, ">", "/app/scripts/data/".$outputfile);
 
+$entries = 0;
+$isoforms = 0;
+$mapped_isoforms = 0;
+$non_mapped_isoforms = 0;
 for my $entry ( @data ) {
+  $entries = $entries + 1;
   my $entry_ac = $entry->{entry};
   my $ensg = $entry->{ENSG};
 
@@ -55,13 +60,13 @@ for my $entry ( @data ) {
   print "Found gene ".$gene->external_name(), "\n";
 
   if (@{$entry->{isoforms}} == 0) {
-    print "No mapping isoforms for entry ".$entry, "\n";
+      print "No mapping isoforms for entry ".$entry, "\n";
   }
 
-  $found_mapping = 0;
-  $no_isoform = 0;
   for my $isoform (@{$entry->{isoforms}}) {
-    $no_isoform = $no_isoform + 1;
+    print "Isoform --".$isoform->{isoform}, "\n";
+    $found_mapping = 0;
+    $isoforms = $isoforms + 1;
     foreach my $transcript ( @{ $gene->get_all_Transcripts() } ) {
       if ( $transcript->translation() ) {
         #print  $transcript->stable_id(),  "\n";
@@ -75,7 +80,8 @@ for my $entry ( @data ) {
         # Check if the isoform's ENSP/ENST matches
         if($isoform->{ENST} eq $enst && $isoform->{ENSP} eq $ensp) {
           print fh $entry_ac.",".$ensg.",".$enst.",".$ensp,",".$ensp_seq.",".$isoform->{isoform}.",".$isoform->{sequence},"\n";
-          print "ENSP matched for transcript ". $enst, "\n";
+          print "ENSP ".$ensp. " matched for transcript ". $enst, "\n";
+          $mapped_isoforms = $mapped_isoforms + 1;
           $found_mapping = 1;
           next;
         }
@@ -89,22 +95,33 @@ for my $entry ( @data ) {
 
           if($isoform->{ENST} == $enst_a && $isoform->{ENSP} == $ensp) {
             print fh $entry_ac.",".$ensg.",".$enst.",".$ensp_a,",".$ensp_a_seq.",".$isoform->{isoform}.",".$isoform->{sequence},"\n";
-            print "ENSP matched for alternative transcript ". $enst, "\n";
+            print "ENSP ".$ensp. "matched for alternative transcript ". $enst, "\n";
+            $mapped_isoforms = $mapped_isoforms + 1;
             $found_mapping = 1;
             next;
           }
         }
       } else {
-        print $transcript->stable_id(), " is non-coding\n";
+        #print $transcript->stable_id(), " is non-coding\n";
       }
     }
 
     if(!$found_mapping) {
-      print "No mapping found for isoform ".$isoform->{isoform},"\n";
+      if($isoform->{ENST}) {
+        $non_mapped_isoforms = $non_mapped_isoforms + 1;
+        print "No mapping found for isoform ".$isoform->{isoform}. "from ensembl but found from nextrprot ".$isoform->{ENST}. " contradiction\n";
+      } else {
+        $non_mapped_isoforms = $non_mapped_isoforms + 1;
+        print "No mapping found for isoform ".$isoform->{isoform},"\n";
+      }
     }
     print "-----------------\n";
   }
-  print("No of isoforms " + $no_isoform);
+
 }
+
+print "Stats\n";
+print "Entries ".$entries,"\n";
+print "Isoforms ".$isoforms . " Mapped to ENSP ".$mapped_isoforms . " Non mapped ".$non_mapped_isoforms;
 
 close($fh)
