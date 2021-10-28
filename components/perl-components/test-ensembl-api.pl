@@ -37,6 +37,8 @@ $entries = 0;
 $isoforms = 0;
 $mapped_isoforms = 0;
 $non_mapped_isoforms = 0;
+
+
 for my $entry ( @data ) {
   $entries = $entries + 1;
   my $entry_ac = $entry->{entry};
@@ -45,6 +47,7 @@ for my $entry ( @data ) {
   print "-----------------\n";
   print "Processing entry ".$entry->{entry}." with ENSG ".$ensg, "\n";
   if($ensg eq "") {
+    print fh $entry_ac.",".$isoform->{isoform}.",".$isoform->{sequence}.",NO_NP_ENSG\n";
     print "No ENSG found for entry\n";
     next;
   }
@@ -65,6 +68,14 @@ for my $entry ( @data ) {
 
   for my $isoform (@{$entry->{isoforms}}) {
     print "Isoform --".$isoform->{isoform}, "\n";
+
+    $found_enst = 0;
+    $enst_found = 0;
+
+    $found_ensp = 0;
+    $ensp_found = 0;
+    $ensp_sequence_found = 0;
+
     $found_mapping = 0;
     $isoforms = $isoforms + 1;
     foreach my $transcript ( @{ $gene->get_all_Transcripts() } ) {
@@ -78,12 +89,23 @@ for my $entry ( @data ) {
         my $ensp_seq = $transcript->translate()->seq();
 
         # Check if the isoform's ENSP/ENST matches
-        if($isoform->{ENST} eq $enst && $isoform->{ENSP} eq $ensp) {
-          print fh $entry_ac.",".$ensg.",".$enst.",".$ensp,",".$ensp_seq.",".$isoform->{isoform}.",".$isoform->{sequence},"\n";
-          print "ENSP ".$ensp. " matched for transcript ". $enst, "\n";
-          $mapped_isoforms = $mapped_isoforms + 1;
-          $found_mapping = 1;
-          next;
+        if($isoform->{ENST} eq $enst) {
+          $found_enst = 1;
+          $enst_found = $enst;
+          if ($isoform->{ENSP} eq $ensp) {
+            $mapped_isoforms = $mapped_isoforms + 1;
+            $found_mapping = 1;
+
+            $found_ensp = 1;
+            $ensp_found = $ensp;
+            $ensp_sequence_found = $ensp_seq;
+            next;
+          } else {
+            print fh $entry_ac.",".$isoform->{isoform}.",".$isoform->{sequence}.",".$ensg.",".$enst."\n";
+            print "NP ENSP ".$isoform->{ENSP}." doesn't match with ENSMBL ENSP ".$ensp."\n";
+          }
+        } else {
+          print "ENST ".$enst ." doesn't match with isform ENST ". $isoform->{ENST}."\n";
         }
 
         foreach my $translation  ( @{ $transcript->get_all_alternative_translations() } ) {
@@ -93,12 +115,19 @@ for my $entry ( @data ) {
           my $ensp_a = $translation->stable_id();
           my $ensp_a_seq = $translation->seq();
 
-          if($isoform->{ENST} == $enst_a && $isoform->{ENSP} == $ensp) {
-            print fh $entry_ac.",".$ensg.",".$enst.",".$ensp_a,",".$ensp_a_seq.",".$isoform->{isoform}.",".$isoform->{sequence},"\n";
-            print "ENSP ".$ensp. "matched for alternative transcript ". $enst, "\n";
-            $mapped_isoforms = $mapped_isoforms + 1;
-            $found_mapping = 1;
-            next;
+          if($isoform->{ENST} == $enst ) {
+            $found_enst = 1;
+            $enst_found = $enst;
+
+            if($isoform->{ENSP} == $ensp_a) {
+              $mapped_isoforms = $mapped_isoforms + 1;
+              $found_mapping = 1;
+
+              $found_ensp = 1;
+              $ensp_found = $ensp_a;
+              $ensp_sequence_found = $ensp_a_seq;
+              next;
+            }
           }
         }
       } else {
@@ -106,10 +135,23 @@ for my $entry ( @data ) {
       }
     }
 
+    if($found_enst == 1) { # ENST found
+      if($found_ensp == 1) { # ENSP found
+        print fh $entry_ac.",".$isoform->{isoform}.",".$isoform->{sequence}.",".$ensg.",".$enst_found.",".$ensp_found,",".$ensp_sequence_found."\n";
+        print "ENSP ".$ensp_found. " matched for transcript ". $enst_found, "\n";
+      } else { # ENST found but ENSP
+        print fh $entry_ac.",".$isoform->{isoform}.",".$isoform->{sequence}.",".$ensg.",".$enst_found.",NO_ENSMBL_ENSP\n";
+        print "No ENSP matched for transcript ". $enst_found, "\n";
+      }
+    } else { # No ENST found
+      print fh $entry_ac.",".$isoform->{isoform}.",".$isoform->{sequence}.",".$ensg.",NO_ENSEMBL_ENST,,,\n";
+      print "No ENST found for isoform ".$isoform->{isoform} ."\n";
+    }
+
     if(!$found_mapping) {
       if($isoform->{ENST}) {
         $non_mapped_isoforms = $non_mapped_isoforms + 1;
-        print "No mapping found for isoform ".$isoform->{isoform}. "from ensembl but found from nextrprot ".$isoform->{ENST}. " contradiction\n";
+        print "No mapping found for isoform ".$isoform->{isoform}. "from ensembl but found from nextrprot ".$isoform->{ENST}. "\n";
       } else {
         $non_mapped_isoforms = $non_mapped_isoforms + 1;
         print "No mapping found for isoform ".$isoform->{isoform},"\n";
