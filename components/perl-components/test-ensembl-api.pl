@@ -27,7 +27,8 @@ $registry->load_registry_from_db(
     -host => $host,
     -port => $port,
     -user => $user,
-    -pass => $pass
+    -pass => $pass,
+    -verbose => '1'
 );
 
 # File to write

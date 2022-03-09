@@ -24,7 +24,7 @@ RUN git clone -b release-1-6-924 --depth 1 https://github.com/bioperl/bioperl-li
 RUN git clone https://github.com/Ensembl/ensembl-git-tools.git
 ENV PATH=/lib/perl/ensembl/ensembl-git-tools/bin:$PATH
 RUN git ensembl --clone api
-RUN git ensembl --checkout --branch release/102 api
+RUN git ensembl --checkout --branch release/104 api
 
 # Bioperl
 #RUN wget https://cpan.metacpan.org/authors/id/C/CJ/CJFIELDS/BioPerl-1.6.924.tar.gz
@@ -64,9 +64,8 @@ ENV NEXTPROT_PERL_PARSE_LIB=/lib/perl
 ENV PERL5LIB=$ENSEMBL_LIB/bioperl-live/lib:$ENSEMBL_LIB/ensembl/modules:$ENSEMBL_LIB/ensembl-compara/modules:$ENSEMBL_LIB/ensembl-variation/modules:$ENSEMBL_LIB/ensembl-funcgen/modules:$ENSEMBL_LIB/bioperl-live
 
 WORKDIR /app/scripts
-COPY ./test-ensembl-api.pl /app/scripts
+ADD ./test-ensembl-api.pl /app/scripts
 RUN chmod +x /app/scripts/test-ensembl-api.pl
-COPY ./json-file-read.pl /app/scripts
 
 
 # COPY intermediary files
