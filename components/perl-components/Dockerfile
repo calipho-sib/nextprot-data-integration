@@ -64,7 +64,7 @@ ENV NEXTPROT_PERL_PARSE_LIB=/lib/perl
 ENV PERL5LIB=$ENSEMBL_LIB/bioperl-live/lib:$ENSEMBL_LIB/ensembl/modules:$ENSEMBL_LIB/ensembl-compara/modules:$ENSEMBL_LIB/ensembl-variation/modules:$ENSEMBL_LIB/ensembl-funcgen/modules:$ENSEMBL_LIB/bioperl-live
 
 WORKDIR /app/scripts
-ADD ./test-ensembl-api.pl /app/scripts
+ADD Ensembl-sequence-matcher.pl /app/scripts
 RUN chmod +x /app/scripts/test-ensembl-api.pl
 
 
